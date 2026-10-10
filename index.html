@@ -97,6 +97,7 @@ header{background:#fff;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px #
   🏪 <span data-i18n="manager">Manager</span>
 </button> 
       <button data-page="analysis" onclick="protectedPage('analysis')"> 📈 <span data-i18n="analysis">Analysis</span> </button>
+  <button data-page="monetization" onclick="protectedPage('monetization')"> 💰 Monetization </button>
  <button data-page="profile" onclick="protectedPage('profile')"> 👤 <span data-i18n="profile">Profile</span> </button>
   </div>
   <div id="profileMenu" class="menu">
@@ -173,8 +174,8 @@ header{background:#fff;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px #
    <textarea id="productMediaText" class="hidden" placeholder="Andika text y'inyongera kuri product..."></textarea>
    <div id="productMediaPreview"></div>
   </div>
-  <p class="notice">Fee yo gushyira product ku isoko: <b>1,000 RWF</b>.</p>
-  <button onclick="publishProduct()">💳 Ishyura 1,000 RWF → Shyira ku isoko</button>
+  <p class="notice">Fee ya product ya mbere: <b>$1 USD</b>.</p>
+  <button onclick="publishProduct()">💳 Ishyura $1 → Shyira ku isoko</button>
   <p id="sellMessage" class="muted"></p>
  </div>
 
@@ -226,7 +227,7 @@ header{background:#fff;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px #
  <div id="examPanel" class="panel hidden"> <h3>📝 <span data-i18n="online_exam">Online Exam</span></h3> <p class="notice"> Exam zigaragara hano iyo Admin yazishyize PUBLIC. </p> <div id="publicExamList"> <p class="muted">Loading exams...</p> </div> </div>
   <h3>📝 Online Exam</h3>
   <p class="notice">Ikizamini gifunguka gusa iyo payment yacyo yemejwe kandi hashize amasaha 24.</p>
-  <button onclick="startPayment('exam',1000)">💳 Pay 1,000 RWF → Prepare Exam</button>
+  <button onclick="startPayment('exam',8)">💳 Pay $8 → Prepare Exam Job</button>
   <div id="examWaiting" class="hidden notice"></div>
   <button id="examButton" class="hidden" onclick="openExam()">🔐 Fungura Exam</button>
  </div>
@@ -242,7 +243,21 @@ header{background:#fff;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px #
  <div class="panel"><h3>🧾 Business activity</h3><div id="bmActivity">Kanda Refresh kureba ibikorwa.</div><button class="secondary" onclick="loadBusinessManagerDashboard()">🔄 Refresh</button></div>
 </section>
 
-<section id="analysisPage" class="page hidden">
+<section id="monetizationPage" class="page hidden">
+  <div class="panel">
+   <h2>💰 Zunivo Creator Monetization</h2>
+   <p class="muted">Ibisabwa byateganyijwe; amafaranga atangwa nyuma yo kugenzura follows/views no kwemeza amategeko ya Admin.</p>
+   <div class="stats"><div class="stat">Verified follows<br><b>100</b></div><div class="stat">Monetization threshold<br><b>1,000 follows</b></div><div class="stat">Views requirement<br><b>3,000,000</b></div><div class="stat">Follow reward<br><b>$0.300</b></div></div>
+   <div class="notice" style="margin-top:12px">Ibi ni amategeko yateganyijwe gusa. Bonus ntizishyurwa mbere y’uko server igenzura ko follows ari nyazo kandi zitari uburiganya.</div>
+   <h3>🛒 Product ya mbere / verification</h3><p>Kwishyura $1 ku product ya mbere kugira ngo isuzumwe. Account iba verified gusa Admin cyangwa payment gateway imaze kwemeza payment.</p>
+   <button onclick="startPayment('first_product_verification',1)">💳 Pay $1 – Verify first product</button>
+   <h3>🎓 Exam Job</h3><p>Nyuma yo kurangiza ibibazo by’imyitwarire y’umukozi, ushobora gusaba gufungurirwa ikizamini cya job. Admin ni we ushyiraho ikizamini.</p>
+   <button onclick="startPayment('exam_job',8)">💳 Pay $8 – Exam Job</button>
+   <div id="examJobStatus" class="notice" style="margin-top:10px">Wait your work — utegereze ko payment na exam access byemezwa.</div>
+  </div>
+ </section>
+
+ <section id="analysisPage" class="page hidden">
  <div class="panel"><h2>📈 Analysis</h2>
   <div class="stats">
    <div class="stat">Views<br><b id="aViews">0</b></div><div class="stat">Clicks<br><b id="aClicks">0</b></div>
@@ -387,7 +402,8 @@ header{background:#fff;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px #
  <div class="panel"><label><input type="radio" name="paymentMethod" value="mtn" checked> MTN Mobile Money</label>
  <label><input type="radio" name="paymentMethod" value="equity"> Equity Bank</label>
  <label><input type="radio" name="paymentMethod" value="visa"> Visa Card</label>
- <p class="muted">Visa gateway nyayo igomba kuba PCI-compliant; Zunivo ntigomba kubika raw card/CVV.</p></div>
+ <label><input type="radio" name="paymentMethod" value="binance"> Binance Pay</label>
+ <p class="muted">Visa na Binance bisaba gateway/API na server-side verification. Ntushyire card number, CVV, password cyangwa API secret muri HTML.</p></div>
  <button id="payButton" onclick="payNow()">Pay</button><button onclick="submitPayment()">📤 Nohereje Payment</button>
  <button class="secondary" onclick="closePayment()">Funga</button><p id="paymentMessage" class="muted"></p>
 </div></div>
@@ -563,11 +579,12 @@ async function publishProduct(){
  if(!user){openAuth();return}const name=$("productName").value.trim(),price=Number($("productPrice").value);if(!name||price<=0){$("sellMessage").textContent="Uzuza product name n'igiciro.";return}
  let media={url:"",text:""};try{media=await uploadProductMedia()}catch(e){$("sellMessage").textContent="Media ntiyabitswe: "+e.message;return}
  const {data,error}=await supabaseClient.from("products").insert({seller_id:user.id,name,description:$("productDescription").value.trim(),price,city:$("productCity").value.trim(),category:$("productCategory").value,image_url:media.url,status:"pending_payment",media_type:productMediaType,media_text:media.text||null}).select().single();
- if(error){$("sellMessage").textContent=error.message;return}startPayment("listing",1000,data.id)
+ if(error){$("sellMessage").textContent=error.message;return}startPayment("listing",1,data.id)
 }
 
 function startPayment(purpose,amount,productId=null){
- if(!user){openAuth();return}paymentPurpose={type:purpose,productId,amount:Number(amount)};$("paymentDescription").innerHTML=`Payment: <b>${escapeHTML(purpose)}</b><br>Amount: <b>${money(amount)}</b>`;$("paymentMessage").textContent="";$("paymentModal").classList.add("show")
+ if(!user){openAuth();return}paymentPurpose={type:purpose,productId,amount:Number(amount)};const usdPurposes=["listing","first_product_verification","exam","exam_job"];
+ $("paymentDescription").innerHTML=`Payment: <b>${escapeHTML(purpose)}</b><br>Amount: <b>${usdPurposes.includes(purpose)?"$"+Number(amount).toFixed(2)+" USD":money(amount)}</b>`;$("paymentMessage").textContent="";$("paymentModal").classList.add("show")
 }
 function closePayment(){$("paymentModal").classList.remove("show")}
 async function payNow(){
@@ -575,7 +592,8 @@ async function payNow(){
  try{
   if(m==="mtn"){location.href="tel:"+encodeURIComponent("*182*8*1*2233481#")}
   else if(m==="equity")$("paymentMessage").innerHTML='<span class="notice">Koresha Equity Mobile Banking/App urangize payment, hanyuma ukande “Nohereje Payment”.</span>';
-  else startVisaGateway()
+  else if(m==="visa")startVisaGateway();
+  else if(m==="binance")startBinanceGateway()
  }finally{setTimeout(()=>$("payButton").disabled=false,2500)}
 }
 async function submitPayment(){
@@ -586,7 +604,7 @@ async function submitPayment(){
  if(error){$("paymentMessage").innerHTML=`<span class="error">${escapeHTML(error.message)}</span>`;return}
  $("paymentMessage").innerHTML=`<span class="success">Payment request #${escapeHTML(data.id)} yabitswe. Tegereza verification.</span>`;
  if(p.type==="listing")$("sellMessage").textContent="Payment request yoherejwe. Product izajya public gusa payment imaze verified.";
- if(p.type==="job_search")await refreshJobAccess();if(p.type==="exam")await refreshExamAccess()
+ if(p.type==="job_search")await refreshJobAccess();if(p.type==="exam")await refreshExamAccess();if(p.type==="exam_job")$("examJobStatus").textContent="Wait your work — payment request yoherejwe; tegereza Admin/gateway verification mbere yo kubona ikizamini." 
 }
 
 async function refreshJobAccess(){
@@ -769,7 +787,8 @@ async function loadWallet(){
 }
 function openWalletPay(){if(!user){openAuth();return}startPayment("wallet_topup",1000)}
 function openWalletWithdraw(){if(!user){openAuth();return}showPage("referral");$("withdrawAmount")?.focus()}
-function startVisaGateway(){if(!user){openAuth();return}alert("Visa gateway placeholder. Before production connect a PCI-compliant gateway; ntubike cyangwa ngo ubike raw card number/CVV muri Supabase.")}
+function startVisaGateway(){if(!user){openAuth();return}$("paymentMessage").innerHTML='<span class="notice">Visa Card: gateway ntirashyirwamo. Huza payment provider na Supabase Edge Function; ntukandike card number cyangwa CVV muri website.</span>'}
+function startBinanceGateway(){if(!user){openAuth();return}$("paymentMessage").innerHTML='<span class="notice">Binance Pay: iyi ni placeholder. Payment nyayo isaba Binance Pay merchant account, server-side order creation na webhook verification. Ntukohereze amafaranga kuri address itagenzuwe.</span>'}
 
 async function showAdminDashboard(){if(!await isZunivoAdmin()){alert("Nturi Admin wa Zunivo.");return}showPage("admin");await loadAdminPayments()}
 
