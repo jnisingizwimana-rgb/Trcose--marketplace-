@@ -20,7 +20,7 @@ header{background:#fff;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px #
 .head{max-width:1120px;margin:auto;padding:10px 14px}
 .top{display:flex;justify-content:center;align-items:center;position:relative}
 .logo{font-size:24px;font-weight:900;color:#1769ff}
-.topActions{position:absolute;right:0;display:flex;gap:7px}
+.topActions{position:absolute;right:0;display:flex;gap:7px;align-items:center}.topAvatarBtn{padding:3px;border-radius:50%;width:42px;height:42px;overflow:hidden;background:#eef1f5;border:2px solid #1769ff}.topAvatarBtn img{width:100%;height:100%;object-fit:cover;border-radius:50%}.earnMenu{display:none;gap:8px;justify-content:center;flex-wrap:wrap;padding:8px 0 2px;max-width:100%}.earnMenu.show{display:flex}.earnMenu button{background:#eaf1ff;color:#1769ff}
 .nav{display:flex;gap:7px;overflow:auto;margin-top:10px;justify-content:center}
 .nav button{background:#eef1f5;color:#263247;white-space:nowrap}
 .nav button.active{background:#1769ff;color:#fff}
@@ -85,20 +85,19 @@ header{background:#fff;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px #
    <div class="logo">Zunivo Market 🛍️</div>
    <div class="topActions">
     <button class="secondary" onclick="openNotifications()" aria-label="Notifications">🔔</button>
-    <button class="secondary" onclick="toggleMenu()" aria-label="Profile menu">👤</button>
+    <button class="topAvatarBtn" onclick="toggleMenu()" aria-label="Open profile menu"><img id="topProfileAvatar" src="https://via.placeholder.com/160x160?text=Z" alt="Profile picture"></button>
    </div>
   </div>
   <div class="nav">
-<button data-page="home" onclick="showPage('home')"> 🏠 <span data-i18n="home">Home</span> </button>
-     <button data-page="sell" onclick="protectedPage('sell')"> 🛒 <span data-i18n="sell">Sell</span> </button>                                                                                                  
-   <button data-page="jobs" onclick="showPage('jobs')"> 💼 <span data-i18n="jobs">Jobs</span> </button>
-
-     <button data-page="businessManager" onclick="protectedPage('businessManager')">
-  🏪 <span data-i18n="manager">Manager</span>
-</button> 
-      <button data-page="analysis" onclick="protectedPage('analysis')"> 📈 <span data-i18n="analysis">Analysis</span> </button>
-  <button data-page="monetization" onclick="protectedPage('monetization')"> 💰 Monetization </button>
- <button data-page="profile" onclick="protectedPage('profile')"> 👤 <span data-i18n="profile">Profile</span> </button>
+   <button data-page="home" onclick="showPage('home')">🏠 <span data-i18n="home">Home</span></button>
+   <button data-page="sell" onclick="protectedPage('sell')">🛒 <span data-i18n="sell">Sell</span></button>
+   <button data-page="jobs" onclick="openStandaloneJobs()">💼 Job</button>
+   <button data-page="businessManager" onclick="protectedPage('businessManager')">🏪 Manager</button>
+   <button type="button" onclick="toggleEarnMenu()">💰 Earn Page</button>
+  </div>
+  <div id="earnMenu" class="earnMenu">
+   <button onclick="protectedPage('monetization');toggleEarnMenu(false)">💰 Monetize</button>
+   <button onclick="protectedPage('analysis');toggleEarnMenu(false)">📈 Analysis</button>
   </div>
   <div id="profileMenu" class="menu">
    <button onclick="protectedPage('profile')">👤 Profile</button>
@@ -445,6 +444,8 @@ function closeModal(id){$(id)?.classList.remove("show")}
 function openAuth(){$("authModal").classList.add("show")}
 function closeAuth(){$("authModal").classList.remove("show")}
 function toggleMenu(){$("profileMenu").classList.toggle("show")}
+function toggleEarnMenu(force){const el=$("earnMenu");if(!el)return;if(force===false){el.classList.remove("show");return}el.classList.toggle("show")}
+function openStandaloneJobs(){window.open("jobs.html","_blank","noopener")}
 function openNotifications(){$("notificationModal").classList.add("show")}
 function protectedPage(page){if(!user){openAuth();return}showPage(page)}
 function showPage(page){
@@ -499,7 +500,7 @@ async function verifyPhoneOTP(){
 }
 async function logout(){await supabaseClient.auth.signOut();user=null;await updateAdminUI();showPage("home")}
 
-function previewProfilePhoto(e){const f=e.target.files?.[0];if(f)$("profileAvatar").src=URL.createObjectURL(f)}
+function previewProfilePhoto(e){const f=e.target.files?.[0];if(f){const url=URL.createObjectURL(f);$("profileAvatar").src=url;if($("topProfileAvatar"))$("topProfileAvatar").src=url}}
 function setMediaType(t){
  productMediaType=t;["image","video","text"].forEach(x=>$("media"+x.charAt(0).toUpperCase()+x.slice(1)+"Btn")?.classList.toggle("active",x===t));
  $("productMediaFile").classList.toggle("hidden",t==="text");$("productMediaText").classList.toggle("hidden",t!=="text");
@@ -563,7 +564,7 @@ function shareReferral(){const c=$("myReferralCode")?.textContent?.trim()||"";sh
 
 async function loadProfile(){
  if(!user)return;const {data}=await supabaseClient.from("profiles").select("*").eq("id",user.id).maybeSingle();
- if(data){$("profileName").value=data.name||user.user_metadata?.name||"";$("profileEmail").value=data.email||user.email||"";$("profilePhone").value=data.phone||user.phone||"";$("profileCity").value=data.city||"";$("profileAbout").value=data.about||"";if(data.avatar_url)$("profileAvatar").src=data.avatar_url}
+ if(data){$("profileName").value=data.name||user.user_metadata?.name||"";$("profileEmail").value=data.email||user.email||"";$("profilePhone").value=data.phone||user.phone||"";$("profileCity").value=data.city||"";$("profileAbout").value=data.about||"";if(data.avatar_url){$("profileAvatar").src=data.avatar_url;if($("topProfileAvatar"))$("topProfileAvatar").src=data.avatar_url}}
 }
 async function saveProfile(){
  if(!user){openAuth();return}let avatarUrl="";try{avatarUrl=await uploadProfilePhoto()}catch(e){$("profileMessage").textContent="Ifoto ntiyabitswe: "+e.message;return}
