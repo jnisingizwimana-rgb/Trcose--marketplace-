@@ -113,6 +113,45 @@ header{background:#fff;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px #
  </div>
 </header>
     
+<section id="newOnlineExamPanel" hidden>
+  <h2>Create New Online Exam</h2>
+
+  <form id="newOnlineExamForm">
+    <label>Exam title</label>
+    <input name="title" required
+           placeholder="Enter exam title">
+
+    <label>Description</label>
+    <textarea name="description"
+              placeholder="Exam description"></textarea>
+
+    <label>Duration (minutes)</label>
+    <input name="duration_minutes"
+           type="number" min="1" value="60" required>
+
+    <label>Passing score (%)</label>
+    <input name="passing_score"
+           type="number" min="0" max="100"
+           value="50" required>
+
+    <label>Total marks</label>
+    <input name="total_marks"
+           type="number" min="1" value="100" required>
+
+    <label>Start date and time</label>
+    <input name="starts_at" type="datetime-local">
+
+    <label>End date and time</label>
+    <input name="ends_at" type="datetime-local">
+
+    <button type="submit">Save Exam</button>
+    <button type="button" id="cancelNewExam">
+      Cancel
+    </button>
+
+    <p id="examMessage" role="status"></p>
+  </form>
+</section>
 <main class="container">
 <section id="homePage" class="page">
  <div class="hero">
