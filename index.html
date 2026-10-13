@@ -115,10 +115,6 @@ header{background:#fff;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px #
     
  <main class="container">
 
-    <p id="examMessage" role="status"></p>
-  </form>
-</section>
-
 <section id="homePage" class="page">
  <div class="hero">
   <h1>Gura ugurishe namupaka</h1>
@@ -362,7 +358,7 @@ header{background:#fff;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px #
     💸 Withdrawals
   </button>
 
-<button type="button" id="newOnlineExamBtn">
+<button type="button" id="newOnlineExamBtn" onclick="showAdminTab('examManager')">
   ➕ New Online Exam
 </button>
 
@@ -391,60 +387,6 @@ header{background:#fff;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px #
   <p class="muted">Iyi dashboard ibara payments ziri muri Supabase; commission nyayo, delivery n'izindi revenue streams zisaba tables/RPC zabyo.</p>
  </div>
     
-<section id="newOnlineExamPanel" hidden>
-  <h2>📝 Create New Online Exam</h2>
-
-  <form id="newOnlineExamForm">
-    <label>Exam Title</label>
-    <input name="title" required
-      placeholder="Enter exam title">
-
-    <label>Description</label>
-    <textarea name="description"
-      placeholder="Describe the exam"></textarea>
-
-    <label>Duration (minutes)</label>
-    <input name="duration_minutes"
-      type="number" min="1" value="60" required>
-
-    <label>Passing Score (%)</label>
-    <input name="passing_score"
-      type="number" min="0" max="100"
-      value="50" required>
-
-    <button type="submit">Save Exam</button>
-    <button type="button" id="closeExamPanel">
-      Close
-    </button>
-  </form>
-
-  <p id="examStatus"></p>
-    
-const newExamBtn = document.getElementById("newOnlineExamBtn");
-const examPanel = document.getElementById("newOnlineExamPanel");
-const closeExamBtn = document.getElementById("closeExamPanel");
-const examForm = document.getElementById("newOnlineExamForm");
-const examStatus = document.getElementById("examStatus");
-
-newExamBtn?.addEventListener("click", () => {
-  examPanel.hidden = false;
-  examPanel.scrollIntoView({ behavior: "smooth" });
-});
-
-closeExamBtn?.addEventListener("click", () => {
-  examPanel.hidden = true;
-});
-
-examForm?.addEventListener("submit", async (event) => {
-  event.preventDefault();
-
-  examStatus.textContent =
-    "Form irakora, ariko ntirabika muri Supabase.";
-
-  // Igice cyo kubika ikizamini kizongerwamo
-  // nyuma yo guhuza Supabase n'uburenganzira bwa admin.
-});
-</section>
 </section>
 </main>
 
@@ -853,7 +795,23 @@ function startBinanceGateway(){if(!user){openAuth();return}$("paymentMessage").i
 
 async function showAdminDashboard(){if(!await isZunivoAdmin()){alert("Nturi Admin wa Zunivo.");return}showPage("admin");await loadAdminPayments()}
 
-    function showAdminTab(t){ $("adminPaymentSection") .classList.toggle("hidden",t!=="payments"); $("adminWithdrawalSection") .classList.toggle("hidden",t!=="withdrawals"); $("adminExamSection") .classList.toggle("hidden",t!=="exams"); $("adminRevenueSection") .classList.toggle("hidden",t!=="revenue"); $("adminExamManagerSection") .classList.toggle("hidden",t!=="examManager"); if(t==="withdrawals") loadAdminWithdrawals(); if(t==="exams") loadAdminExams(); if(t==="revenue") loadAdminRevenue(); if(t==="examManager"){ resetAdminExamBuilder(); loadAdminExamManager(); } } 
+    function showAdminTab(t){
+  $("adminPaymentSection").classList.toggle("hidden", t !== "payments");
+  $("adminWithdrawalSection").classList.toggle("hidden", t !== "withdrawals");
+  // The exam builder is nested inside adminExamSection, so its parent
+  // must remain visible for both the results and the builder tabs.
+  $("adminExamSection").classList.toggle("hidden", t !== "exams" && t !== "examManager");
+  $("adminRevenueSection").classList.toggle("hidden", t !== "revenue");
+  $("adminExamManagerSection").classList.toggle("hidden", t !== "examManager");
+  if(t === "withdrawals") loadAdminWithdrawals();
+  if(t === "exams") loadAdminExams();
+  if(t === "revenue") loadAdminRevenue();
+  if(t === "examManager") {
+    resetAdminExamBuilder();
+    loadAdminExamManager();
+    $("adminExamManagerSection").scrollIntoView({behavior:"smooth", block:"start"});
+  }
+} 
 async function loadAdminPayments(){
  if(!await isZunivoAdmin())return;const box=$("adminPaymentList");box.innerHTML="⏳ Turimo gushaka payments...";
  const {data,error}=await supabaseClient.rpc("admin_get_payments");if(error){box.innerHTML=`<div class="error">${escapeHTML(error.message)}</div>`;return}
