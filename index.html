@@ -419,6 +419,31 @@ header{background:#fff;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px #
   </form>
 
   <p id="examStatus"></p>
+    
+const newExamBtn = document.getElementById("newOnlineExamBtn");
+const examPanel = document.getElementById("newOnlineExamPanel");
+const closeExamBtn = document.getElementById("closeExamPanel");
+const examForm = document.getElementById("newOnlineExamForm");
+const examStatus = document.getElementById("examStatus");
+
+newExamBtn?.addEventListener("click", () => {
+  examPanel.hidden = false;
+  examPanel.scrollIntoView({ behavior: "smooth" });
+});
+
+closeExamBtn?.addEventListener("click", () => {
+  examPanel.hidden = true;
+});
+
+examForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  examStatus.textContent =
+    "Form irakora, ariko ntirabika muri Supabase.";
+
+  // Igice cyo kubika ikizamini kizongerwamo
+  // nyuma yo guhuza Supabase n'uburenganzira bwa admin.
+});
 </section>
 </section>
 </main>
